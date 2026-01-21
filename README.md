@@ -35,7 +35,3 @@ This course teaches Master students (non-CS disciplines) how to effectively use 
 ## License
 
 MIT License
-
-## Acknowledgements
-
-Many thanks to groq for implementing the example.
