@@ -70,7 +70,7 @@ Common problems:
 - [[X]] "It works on my machine" syndrome
 - [[X]] Lost track of which parameters produced which results
 - [[X]] Dependencies changed and code no longer runs
-- [[X]] Accidentally shared API keys on GitHub
+- [[X]] Data sets are not documented
 
 ******************************************************************************
 
@@ -99,19 +99,26 @@ Let's learn these through a practical example!
 
 We'll build a simple but useful tool: **A Name Parser**
 
-**What it does:**
-
-1. Takes a name as input (via command line)
-2. Uses an LLM (Groq API with Llama 3) to analyze the name
-3. Outputs the parsed components: first name, last name, and title
-
 ```ascii
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Name      │     │    LLM      │     │   Parsed    │
 │   Input     │────▶│   (Groq)    │────▶│   Output    │
 │  (CLI)      │     │             │     │             │
 └─────────────┘     └─────────────┘     └─────────────┘
+
+Winkler, Clemens, Prof. Dr.
+Bernhard von Cotta
+Humboldt; Alexander
+"..."                                                                                                                                   .
 ```
+
+**What it does:**
+
+1. Takes a name as input (via command line)
+2. Uses an LLM (Groq API with Llama 3) to analyze the name
+3. Outputs the parsed components: first name, last name, and title
+
+> This project is motivated by real research focussing on the extraction of metadata from learning content.
 
 ******************************************************************************
 
@@ -129,9 +136,9 @@ python src/main.py "Prof. Dr. Anna Maria Schmidt"
 ```
 Analysiere: Prof. Dr. Anna Maria Schmidt
 
-Vorname:  Anna Maria
-Nachname: Schmidt
-Titel:    Prof. Dr.
+First:  Anna Maria
+Last :  Schmidt
+Title:  Prof. Dr.
 ```
 
 More examples:
@@ -140,6 +147,8 @@ More examples:
 python src/main.py "Hans Müller"
 python src/main.py "von Goethe, Johann Wolfgang"
 ```
+
+> Please note: We do not cover the details of LLM integration today. Focus is on project structure and best practices!
 
 ******************************************************************************
 
@@ -165,7 +174,7 @@ A well-organized project is:
 
 **Our Name Parser Structure:**
 
-```ascii
+```
 name_parser/
 ├── src/
 │   ├── __init__.py
@@ -180,43 +189,22 @@ name_parser/
 ├── .env                     <- API keys (gitignored!)
 ├── .env.example             <- Template for .env
 ├── .gitignore
-└── README.md
+└── README.md 
 ```
-
-******************************************************************************
-
-                              {{2-3}}
-******************************************************************************
 
 **Key Principles:**
 
-| Folder/File | Purpose | In Git? |
-|-------------|---------|---------|
-| `src/` | Source code | Yes |
-| `config/` | Configuration files | Yes |
-| `logs/` | Log files | No |
-| `.env` | Secrets (API keys) | **Never!** |
-| `.env.example` | Template for secrets | Yes |
-| `Pipfile` | Dependencies | Yes |
-| `Pipfile.lock` | Locked versions | Yes |
+| Folder/File    | Purpose              | Public?    |
+| -------------- | -------------------- | ---------- |
+| `src/`         | Source code          | Yes        |
+| `config/`      | Configuration files  | Yes        |
+| `logs/`        | Log files            | No         |
+| `.env`         | Secrets (API keys)   | **Never!** |
+| `.env.example` | Template for secrets | Yes        |
+| `Pipfile`      | Dependencies         | Yes        |
+| `Pipfile.lock` | Locked versions      | Yes        |
 
 > **Golden Rule:** Separate what changes frequently (secrets, output, logs) from what stays stable (code, configuration).
-
-******************************************************************************
-
-                              {{3-4}}
-******************************************************************************
-
-**Quiz: Where does it belong?**
-
-You have a file containing your Groq API key. Where should it go?
-
-- [( )] `src/constants.py`
-- [( )] `config/api_key.yaml`
-- [(X)] `.env`
-- [( )] `README.md`
-[[?]] Think about what happens if you accidentally share your code...
-[[!]] API keys and other secrets should ALWAYS go in `.env` files, which are gitignored!
 
 ******************************************************************************
 
@@ -274,6 +262,8 @@ pipenv install requests
 pipenv lock
 ```
 
+> Pipenv is one of several tools for dependency management. Alternatives include Poetry and Conda.
+
 ******************************************************************************
 
                               {{2-3}}
@@ -314,110 +304,62 @@ python_version = "3.12"
 
 ******************************************************************************
 
-                              {{3-4}}
-******************************************************************************
-
-**Quiz: Dependency Management**
-
-Why is `Pipfile.lock` important?
-
-- [( )] It makes the code run faster
-- [(X)] It ensures everyone uses the exact same package versions
-- [( )] It's required by Python
-- [( )] It stores your API keys
-[[?]] Think about reproducibility across different machines and time...
-
-******************************************************************************
-
----
-
-## 5. Configuration and Secrets
+## 5. Configuration
 
                               {{0-1}}
 ******************************************************************************
 
-**Secrets: The .env Pattern**
+**The Problem: Configuration Mixed with Code**
 
-**Never put secrets in your code!**
-
-```python
-# DANGER! Never do this:
-api_key = "gsk_abc123..."  # Will end up on GitHub!
-```
-
-Instead, use environment variables:
-
-```bash
-# .env (gitignored!)
-GROQ_API_KEY=gsk_abc123...
-```
+When settings and prompts live directly in your code, things get messy fast:
 
 ```python
-import os
-from dotenv import load_dotenv
+def parse_name(name: str) -> dict:
+    client = Groq()
 
-load_dotenv()  # Load .env file
-api_key = os.getenv("GROQ_API_KEY")
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        temperature=0.1,
+        max_tokens=200,
+        messages=[
+            {
+                "role": "system",
+                "content": """You are an expert in name analysis.
+Your task is to parse names into their components.
+
+Extract the following fields:
+- title: Academic or professional title (Dr., Prof., etc.)
+- first_name: The person's first name
+- last_name: The person's last name
+
+Return ONLY valid JSON, no explanations.
+
+Example:
+Input: "Dr. Maria Schmidt"
+Output: {"title": "Dr.", "first_name": "Maria", "last_name": "Schmidt"}
+
+Input: "Prof. Dr. Hans-Peter Müller"
+Output: {"title": "Prof. Dr.", "first_name": "Hans-Peter", "last_name": "Müller"}
+"""
+            },
+            {"role": "user", "content": name}
+        ]
+    )
+    return json.loads(response.choices[0].message.content)
 ```
+
+**Problems:**
+
+- Hard to read: business logic buried under configuration
+- Hard to change: editing prompts requires modifying code
+- Hard to experiment: can't easily try different models or settings
 
 ******************************************************************************
 
                               {{1-2}}
 ******************************************************************************
 
-**The .env.example Pattern**
-
-Create a template that IS committed to Git:
-
-```bash
-# .env.example (committed to Git)
-# Copy this file to .env and fill in your values
-
-# Get your key at: https://console.groq.com/keys
-GROQ_API_KEY=your_api_key_here
-```
-
-Your colleagues can then:
-
-```bash
-cp .env.example .env
-# Edit .env with their own API key
-```
-
-******************************************************************************
-
-                              {{2-3}}
-******************************************************************************
-
-**The .gitignore File**
-
-```bash
-# .gitignore
-
-# Secrets - NEVER commit!
-.env
-
-# Logs
-logs/
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-
-# IDE
-.vscode/
-.idea/
-```
-
-> **Critical:** Always check your `.gitignore` before your first commit!
-
-******************************************************************************
-
-                              {{3-4}}
-******************************************************************************
-
-**Configuration Files with YAML**
+**The Solution: Configuration Files with YAML**
 
 Separate your settings from your code using configuration files:
 
@@ -453,7 +395,7 @@ def load_config() -> dict:
 
 ******************************************************************************
 
-                              {{4-5}}
+                              {{2-3}}
 ******************************************************************************
 
 **Custom Configuration via CLI**
@@ -461,7 +403,7 @@ def load_config() -> dict:
 Allow users to specify their own configuration file:
 
 ```bash
-python src/main.py "Dr. Max Mustermann" -c my_config.yaml
+python src/main.py "Dr. Max Mustermann" -c settings.yaml
 ```
 
 In the code:
@@ -478,11 +420,115 @@ else:
     config = load_config()
 ```
 
+> **Flexibility:** Users can easily switch configurations for different experiments. Just provide a different YAML file!
+
 ******************************************************************************
 
 ---
 
-## 6. Version Control with Git
+## 6. Secrets Management
+
+                              {{0-1}}
+******************************************************************************
+
+**What are Environment Variables?**
+
+Environment variables are key-value pairs stored in your operating system's environment, outside of your code. Think of them as a "secret notebook" that your programs can read, but that isn't part of your source code.
+
+```ascii
+┌─────────────────────────────────────────────────────────────┐
+│                    Operating System                         │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │            Environment Variables                    │    │
+│  │  ┌─────────────────┬────────────────────────────┐   │    │
+│  │  │ Variable Name   │ Value                      │   │    │
+│  │  ├─────────────────┼────────────────────────────┤   │    │
+│  │  │ PATH            │ /usr/bin:/usr/local/bin    │   │    │
+│  │  │ HOME            │ /home/username             │   │    │
+│  │  │ GROQ_API_KEY    │ gsk_abc123...              │   │    │
+│  │  └─────────────────┴────────────────────────────┘   │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                           ↑                                 │
+│           Your Python program reads these                   │
+└─────────────────────────────────────────────────────────────┘                                                                      .
+```
+
+**Why use them?**
+
+1. **Security**: Secrets stay out of your code (and Git history!)
+2. **Flexibility**: Different values for development, testing, production
+3. **Portability**: Same code works on different machines with different configs
+
+You can see your current environment variables in the terminal:
+
+```bash
+# Show all environment variables
+env
+
+# Show a specific one
+echo $HOME
+```
+
+******************************************************************************
+
+                              {{1-2}}
+******************************************************************************
+
+**Secrets: The .env Pattern**
+
+**Never put secrets in your code!**
+
+```python
+# DANGER! Never do this:
+api_key = "gsk_abc123..."  # Will end up on GitHub!
+```
+
+Instead, use environment variables:
+
+```bash
+# .env (gitignored!)
+GROQ_API_KEY=gsk_abc123...
+```
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load .env file
+api_key = os.getenv("GROQ_API_KEY")
+```
+
+******************************************************************************
+
+                              {{2-3}}
+******************************************************************************
+
+**The .env.example Pattern**
+
+> We want to share the example structure of our .env file without sharing actual secrets but without "content".
+
+Create a template that IS committed to Git:
+
+```bash
+# .env.example (committed to Git)
+# Copy this file to .env and fill in your values
+
+# Get your key at: https://console.groq.com/keys
+GROQ_API_KEY=your_api_key_here
+```
+
+Your colleagues can then:
+
+```bash
+cp .env.example .env
+# Edit .env with their own API key
+```
+
+******************************************************************************
+
+---
+
+## 7. Version Control with Git
 
                               {{0-1}}
 ******************************************************************************
@@ -507,6 +553,10 @@ Use Git to track all changes with:
 - Full history
 - Easy rollback
 
+> Git is the most widely used version control system in the world!
+
+!?[](https://www.youtube.com/watch?v=lLoJHifWTRw)
+
 ******************************************************************************
 
                               {{1-2}}
@@ -516,6 +566,7 @@ Use Git to track all changes with:
 
 ```text @plantUML.png
 @startuml
+left to right direction
 hide empty description
 [*] --> Untracked : Create new file
 Untracked --> Staged : git add
@@ -526,6 +577,8 @@ Committed --> Untracked : git rm
 @enduml
 ```
 
+> Let's see this in action in our repository!
+
 ******************************************************************************
 
                               {{2-3}}
@@ -534,10 +587,16 @@ Committed --> Untracked : git rm
 **Basic Git Workflow**
 
 ``` text @ExplainGit.eval
-git commit -m "Initial project structure"
-git commit -m "Add name parser module"
-git commit -m "Add CLI interface"
+git commit -m V1
+git commit -m V2
+git commit -m V3
 ```
+
++ View a specific version: `git checkout <commit-hash>`
++ Revert a version with a new commit: `git revert <commit-hash>`
++ Create a new branch: `git branch <branch-name>`
++ Create and switch to a new branch: `git checkout -b <branch-name>`
++ Merge branches: `git merge <branch-name>`
 
 ******************************************************************************
 
@@ -563,6 +622,8 @@ git commit -m "Add name parsing feature"
 # View history
 git log --oneline
 ```
+
+
 
 ******************************************************************************
 
@@ -598,21 +659,49 @@ git commit -m "Update to Llama 3.1 model"
 
 Your `.gitignore` protects you, but double-check:
 
-| Commit | Don't Commit |
-|--------|--------------|
-| Source code (`*.py`) | API keys (`.env`) |
-| `Pipfile`, `Pipfile.lock` | `__pycache__/` |
-| `config/settings.yaml` | `logs/` |
-| `README.md` | IDE settings |
-| `.gitignore` | Virtual environments |
+| Commit                    | Don't Commit         |
+| ------------------------- | -------------------- |
+| Source code (`*.py`)      | API keys (`.env`)    |
+| `Pipfile`, `Pipfile.lock` | `__pycache__/`       |
+| `config/settings.yaml`    | `logs/`              |
+| `README.md`               | IDE settings         |
+| `.gitignore`              | Virtual environments |
 
 > **Before pushing:** Always run `git status` and check what's staged!
 
 ******************************************************************************
 
+                              {{6-7}}
+******************************************************************************
+
+**The .gitignore File**
+
+```bash
+# .gitignore
+
+# Secrets - NEVER commit!
+.env
+
+# Logs
+logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE
+.vscode/
+.idea/
+```
+
+> **Critical:** Always check your `.gitignore` before your first commit!
+
+******************************************************************************
+
 ---
 
-## 7. Putting It All Together
+## 8. Putting It All Together
 
                               {{0-1}}
 ******************************************************************************
@@ -621,14 +710,14 @@ Your `.gitignore` protects you, but double-check:
 
 When starting a new research project:
 
-- [ ] Create folder structure (`src/`, `config/`)
-- [ ] Initialize pipenv: `pipenv install`
-- [ ] Create `config/settings.yaml` for configuration
-- [ ] Create `.env.example` template
-- [ ] Set up `.gitignore` (include `.env`, `logs/`)
-- [ ] Initialize Git: `git init`
-- [ ] Write `README.md` with setup instructions
-- [ ] Make first commit
+- Create folder structure (`src/`, `config/`)
+- Initialize pipenv: `pipenv install`
+- Create `config/settings.yaml` for configuration
+- Create `.env.example` template
+- Set up `.gitignore` (include `.env`, `logs/`)
+- Initialize Git: `git init`
+- Write `README.md` with setup instructions
+- Make first commit
 
 ******************************************************************************
 
@@ -637,7 +726,7 @@ When starting a new research project:
 
 **README.md Template**
 
-```markdown
+````markdown
 # Name Parser
 
 Parses names into first name, last name, and title using AI.
@@ -651,7 +740,7 @@ Parses names into first name, last name, and title using AI.
 
 1. Clone the repository
 2. Copy `.env.example` to `.env` and add your API key
-3. Install dependencies:
+3. Install dependencies: 
    ```bash
    pipenv install
    pipenv shell
@@ -662,7 +751,7 @@ Parses names into first name, last name, and title using AI.
 ```bash
 python src/main.py "Prof. Dr. Anna Maria Schmidt"
 ```
-```
+````
 
 ******************************************************************************
 
