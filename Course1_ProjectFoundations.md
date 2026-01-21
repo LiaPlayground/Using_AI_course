@@ -32,7 +32,8 @@ By the end of this session, you will be able to:
 2. Organize a research project with proper folder structure
 3. Manage dependencies using pipenv
 4. Handle configuration and secrets safely
-5. Use Git for basic version control
+5. Implement logging for debugging and reproducibility
+6. Use Git for basic version control
 
 ---
 
@@ -528,7 +529,150 @@ cp .env.example .env
 
 ---
 
-## 7. Version Control with Git
+## 7. Logging
+
+                              {{0-1}}
+******************************************************************************
+
+**Why Logging Matters**
+
+When working with LLMs and external APIs, logging is essential for:
+
+- **Debugging**: Understanding what went wrong when errors occur
+- **Reproducibility**: Tracking which inputs produced which outputs
+- **Cost Control**: Monitoring API usage and token consumption
+- **Auditing**: Keeping records of all requests for later analysis
+
+Without logging, you're flying blind:
+
+> "My script worked yesterday, but today it gives different results. What changed?"
+
+******************************************************************************
+
+                              {{1-2}}
+******************************************************************************
+
+**Python's logging Module**
+
+Python has a built-in logging module - no external dependencies needed:
+
+```python
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("logs/requests.log"),
+        logging.StreamHandler()  # Also print to console
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+# Use it in your code
+logger.info(f"Parsing name: {name}")
+logger.debug(f"API response: {response}")
+logger.error(f"Failed to parse: {error}")
+```
+
+**Log Levels:**
+
+| Level    | When to use                              |
+| -------- | ---------------------------------------- |
+| DEBUG    | Detailed information for debugging       |
+| INFO     | General information about program flow   |
+| WARNING  | Something unexpected, but not an error   |
+| ERROR    | Something failed                         |
+| CRITICAL | Program cannot continue                  |
+
+******************************************************************************
+
+                              {{2-3}}
+******************************************************************************
+
+**Logging in Our Name Parser**
+
+In `src/name_parser.py`:
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+def parse_name(name: str, config: dict) -> dict:
+    logger.info(f"Parsing name: {name}")
+
+    try:
+        response = client.chat.completions.create(...)
+        logger.debug(f"Raw response: {response}")
+
+        result = json.loads(response.choices[0].message.content)
+        logger.info(f"Successfully parsed: {result}")
+        return result
+
+    except Exception as e:
+        logger.error(f"Failed to parse '{name}': {e}")
+        raise
+```
+
+**Example Log Output:**
+
+```
+2024-01-15 14:32:01 - INFO - Parsing name: Prof. Dr. Anna Schmidt
+2024-01-15 14:32:02 - INFO - Successfully parsed: {'title': 'Prof. Dr.', 'first_name': 'Anna', 'last_name': 'Schmidt'}
+```
+
+******************************************************************************
+
+                              {{3-4}}
+******************************************************************************
+
+**Best Practices for Logging**
+
+1. **Create the logs directory** but keep it empty in Git:
+
+   ```bash
+   mkdir logs
+   touch logs/.gitkeep
+   ```
+
+2. **Add logs to .gitignore** (but not the directory itself):
+
+   ```bash
+   # In .gitignore
+   logs/*.log
+   ```
+
+3. **Use appropriate log levels**:
+   - `DEBUG` for development (verbose)
+   - `INFO` for production (important events only)
+
+4. **Include context** in log messages:
+
+   ```python
+   # Bad
+   logger.info("Request sent")
+
+   # Good
+   logger.info(f"Request sent for name='{name}' using model='{model}'")
+   ```
+
+5. **Never log secrets**:
+
+   ```python
+   # DANGER! Never do this:
+   logger.debug(f"Using API key: {api_key}")
+   ```
+
+> **Remember:** Logs are for you and your future self. Write messages that will be helpful when debugging at 2 AM!
+
+******************************************************************************
+
+---
+
+## 8. Version Control with Git
 
                               {{0-1}}
 ******************************************************************************
@@ -701,7 +845,7 @@ __pycache__/
 
 ---
 
-## 8. Putting It All Together
+## 9. Putting It All Together
 
                               {{0-1}}
 ******************************************************************************
@@ -764,7 +908,8 @@ python src/main.py "Prof. Dr. Anna Maria Schmidt"
 1. **Project Structure**: Organize files logically, keep it simple
 2. **pipenv**: Reproducible Python environments
 3. **Secrets**: `.env` files, NEVER commit API keys
-4. **Git**: Track changes, write good commit messages
+4. **Logging**: Track API calls and debug issues effectively
+5. **Git**: Track changes, write good commit messages
 
 **Next Session:**
 
