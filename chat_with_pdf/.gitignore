@@ -1,0 +1,30 @@
+# Generated files
+logs/
+*.pdf
+
+# Data files (may contain sensitive content)
+data/papers/*.pdf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.eggs/
+*.egg-info/
+
+# pipenv
+Pipfile.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vector store cache
+.vector_cache/

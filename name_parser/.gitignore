@@ -1,0 +1,28 @@
+# Secrets - NEVER commit!
+.env
+
+# Generated files
+output/
+logs/
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.eggs/
+*.egg-info/
+
+# pipenv
+Pipfile.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

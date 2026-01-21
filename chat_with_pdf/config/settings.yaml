@@ -1,0 +1,25 @@
+# Chat with PDF Configuration
+
+llm:
+  # Ollama model for generating answers
+  model: "llama3.2"
+  # Creativity level (0.0 = deterministic, 1.0 = creative)
+  temperature: 0.3
+
+embeddings:
+  # Ollama model for creating embeddings
+  model: "nomic-embed-text"
+  # Number of words per text chunk
+  chunk_size: 500
+  # Overlap between chunks (for context continuity)
+  chunk_overlap: 50
+
+search:
+  # Number of relevant chunks to retrieve
+  top_k: 3
+
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  # Log file path
+  file: "logs/chat.log"

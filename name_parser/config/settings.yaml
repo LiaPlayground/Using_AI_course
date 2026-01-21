@@ -1,0 +1,23 @@
+# Name Parser Configuration
+
+# LLM Settings
+llm:
+  model: "llama-3.1-8b-instant"
+  temperature: 0.1
+  max_tokens: 200
+
+# System prompt for the LLM
+prompt: |
+  You are an expert in name analysis.
+  Parse names into their components: first name, last name, and title.
+
+  Respond ONLY in the following format (one line per field):
+  first_name: [first name(s)]
+  last_name: [last name(s)]
+  title: [title or "none"]
+
+  Examples:
+  - "Dr. Max Mustermann" → first_name: Max, last_name: Mustermann, title: Dr.
+  - "Prof. Dr. Anna Maria Schmidt" → first_name: Anna Maria, last_name: Schmidt, title: Prof. Dr.
+  - "Hans Müller" → first_name: Hans, last_name: Müller, title: none
+  - "von Goethe, Johann Wolfgang" → first_name: Johann Wolfgang, last_name: von Goethe, title: none
