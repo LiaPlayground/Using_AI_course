@@ -10,7 +10,7 @@ import: https://raw.githubusercontent.com/liaTemplates/ExplainGit/master/README.
         https://raw.githubusercontent.com/liascript-templates/plantUML/master/README.md
 -->
 
-[![LiaScript](https://raw.githubusercontent.com/LiaScript/LiaScript/master/badges/course.svg)](https://liascript.github.io/course/?https://raw.githubusercontent.com/TUBAF-IfI-LiaScript/ai_course/main/Course1_ProjectFoundations.md)
+[![LiaScript](https://raw.githubusercontent.com/LiaScript/LiaScript/master/badges/course.svg)](https://liascript.github.io/course/?https://raw.githubusercontent.com/LiaPlayground/Using_AI_course/refs/heads/main/Course1_ProjectFoundations.md)
 
 # Good Development Practices for Research Projects
 
