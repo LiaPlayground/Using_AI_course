@@ -18,7 +18,6 @@ This course teaches Master students (non-CS disciplines) how to effectively use 
 - Email: sebastian.zug@informatik.tu-freiberg.de
 - Institution: [TU Bergakademie Freiberg, Institute of Computer Science](https://tu-freiberg.de/fakult1/inf)
 
-
 ## Learning Objectives
 
 - Understand why good project structure matters for reproducibility
@@ -36,3 +35,7 @@ This course teaches Master students (non-CS disciplines) how to effectively use 
 ## License
 
 MIT License
+
+## Acknowledgements
+
+Many thanks to groq for implementing the example.
