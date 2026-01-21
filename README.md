@@ -27,6 +27,12 @@ This course teaches Master students (non-CS disciplines) how to effectively use 
 - Integrate LLM APIs into Python projects
 - Run local LLMs with Ollama (Part 2)
 
+## What about you?
+
++ What are your experiences with AI/LLM tools in research?
++ Which programming languages and tools do you use?
++ What challenges have you faced in managing research code?
+
 ## License
 
 MIT License
