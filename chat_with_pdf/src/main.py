@@ -61,7 +61,7 @@ def load_config(config_path: Path = None) -> dict:
     if not config_path.exists():
         logging.warning(f"Config not found: {config_path}, using defaults")
         return {
-            "llm": {"model": "llama3.2", "temperature": 0.3},
+            "llm": {"model": "llama3.3:70b", "temperature": 0.3},
             "embeddings": {"model": "nomic-embed-text", "chunk_size": 500, "chunk_overlap": 50},
             "search": {"top_k": 3},
             "logging": {"level": "INFO", "file": "logs/chat.log"}

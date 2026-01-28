@@ -34,6 +34,7 @@ By the end of this session, you will be able to:
 4. Handle configuration and secrets safely
 5. Implement logging for debugging and reproducibility
 6. Use Git for basic version control
+7. Version large data files and models with DVC
 
 ---
 
@@ -843,9 +844,204 @@ __pycache__/
 
 ******************************************************************************
 
+
+
+## 9. Data Version Management
+
+                              {{0-1}}
+******************************************************************************
+
+**The Problem: Large Files and Git**
+
+Git is great for code, but struggles with large files like:
+
+- Training datasets (CSV, images, audio)
+- Trained model weights (`.pkl`, `.h5`, `.pt`)
+- Experiment outputs and results
+
+```bash
+# Git will complain (or become very slow):
+git add data/training_images/  # 2 GB of images
+git add models/trained_model.pkl  # 500 MB model
+```
+
+**Why is this a problem?**
+
+- Git stores complete copies of every version
+- Repository becomes huge and slow
+- Collaboration becomes painful
+- GitHub has file size limits (100 MB)
+
+******************************************************************************
+
+                              {{1-2}}
+******************************************************************************
+
+**The Solution: DVC (Data Version Control)**
+
+DVC extends Git to handle large files and datasets:
+
+```ascii
+┌─────────────────────────────────────────────────────────────┐
+│                     Your Repository                         │
+│  ┌─────────────────┐          ┌─────────────────────────┐   │
+│  │      Git        │          │         DVC             │   │
+│  │  ─────────────  │          │  ─────────────────────  │   │
+│  │  • Source code  │          │  • Large datasets       │   │
+│  │  • Config files │          │  • Model weights        │   │
+│  │  • .dvc files   │◄────────►│  • Experiment outputs   │   │
+│  │    (pointers)   │          │                         │   │
+│  └─────────────────┘          └─────────────────────────┘   │
+│          │                              │                   │
+│          ▼                              ▼                   │
+│      GitHub/GitLab              Remote Storage              │
+│                              (S3, GCS, SSH, local)          │
+└─────────────────────────────────────────────────────────────┘                                                         .
+```
+
+**Key idea:** Git tracks small pointer files (`.dvc`), while actual data is stored separately.
+
+******************************************************************************
+
+                              {{2-3}}
+******************************************************************************
+
+**Getting Started with DVC**
+
+```bash
+# Install DVC
+pipenv install dvc
+
+# Initialize DVC in your Git repository
+cd my_project
+dvc init
+
+# Track a large file or directory
+dvc add data/training_data.csv
+dvc add models/
+
+# This creates:
+# - data/training_data.csv.dvc  (small pointer file)
+# - .gitignore entry for the actual data
+```
+
+**What happens:**
+
+1. DVC moves your data to a cache (`.dvc/cache/`)
+2. Creates a small `.dvc` file with a hash of the data
+3. Adds the original file to `.gitignore`
+
+```bash
+# Now commit the pointer file to Git
+git add data/training_data.csv.dvc data/.gitignore
+git commit -m "Add training dataset"
+```
+
+******************************************************************************
+
+                              {{3-4}}
+******************************************************************************
+
+**Remote Storage**
+
+Store your data on a remote server (like GitHub for code):
+
+```bash
+# Configure a remote storage location
+dvc remote add -d myremote /path/to/storage
+# Or use cloud storage:
+# dvc remote add -d myremote s3://mybucket/dvc-storage
+# dvc remote add -d myremote gdrive://folder_id
+
+# Push data to remote
+dvc push
+
+# Pull data on another machine
+dvc pull
+```
+
+**Collaboration workflow:**
+
+```bash
+# Colleague clones your repo
+git clone https://github.com/user/project.git
+cd project
+
+# Get the data
+dvc pull  # Downloads data from remote storage
+```
+
+******************************************************************************
+
+                              {{4-5}}
+******************************************************************************
+
+**Project Structure with DVC**
+
+```
+name_parser/
+├── src/
+│   └── ...
+├── config/
+│   └── settings.yaml
+├── data/                        <- Data directory
+│   ├── raw/                     <- Original, immutable data
+│   │   └── names.csv.dvc        <- DVC pointer file
+│   └── processed/               <- Cleaned/transformed data
+│       └── parsed_names.csv.dvc
+├── models/                      <- Trained models
+│   └── name_classifier.pkl.dvc
+├── .dvc/                        <- DVC internals
+│   ├── config                   <- Remote storage config
+│   └── .gitignore
+├── .dvcignore                   <- Files DVC should ignore
+├── Pipfile
+├── .env
+└── .gitignore
+```
+
+> **Tip:** Add `data/` and `models/` to `.gitignore`, but commit the `.dvc` pointer files!
+
+******************************************************************************
+
+                              {{5-6}}
+******************************************************************************
+
+**Essential DVC Commands**
+
+| Command | Description |
+|---------|-------------|
+| `dvc init` | Initialize DVC in a Git repo |
+| `dvc add <file>` | Start tracking a file with DVC |
+| `dvc push` | Upload data to remote storage |
+| `dvc pull` | Download data from remote storage |
+| `dvc status` | Show changed files |
+| `dvc checkout` | Restore data to match current Git commit |
+
+**Versioning workflow:**
+
+```bash
+# Update your data
+# ... modify data/training_data.csv ...
+
+# Track the new version
+dvc add data/training_data.csv
+git add data/training_data.csv.dvc
+git commit -m "Update training data with new samples"
+dvc push
+
+# Later: go back to an older version
+git checkout v1.0
+dvc checkout  # Restores data to match that Git version
+```
+
+> **Remember:** DVC versioning follows Git - each commit can point to different data versions!
+
+******************************************************************************
+
 ---
 
-## 9. Putting It All Together
+## 10. Putting It All Together
 
                               {{0-1}}
 ******************************************************************************
@@ -910,6 +1106,7 @@ python src/main.py "Prof. Dr. Anna Maria Schmidt"
 3. **Secrets**: `.env` files, NEVER commit API keys
 4. **Logging**: Track API calls and debug issues effectively
 5. **Git**: Track changes, write good commit messages
+6. **DVC**: Version control for large datasets and models
 
 **Next Session:**
 
@@ -921,5 +1118,6 @@ In Part 2, we'll build a more complex project using **local LLMs** with Ollama -
 
 - [pipenv Documentation](https://pipenv.pypa.io/)
 - [Git Tutorial (Software Carpentry)](https://swcarpentry.github.io/git-novice/)
+- [DVC Documentation](https://dvc.org/doc)
 - [The Turing Way - Reproducible Research](https://the-turing-way.netlify.app/)
 - [Example Project: name_parser](./name_parser/)

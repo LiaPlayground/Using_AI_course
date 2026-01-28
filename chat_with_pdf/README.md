@@ -16,10 +16,10 @@ Chat with PDF is a Retrieval-Augmented Generation (RAG) application that lets yo
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.12+
 - Ollama (https://ollama.ai)
 - Required Ollama models:
-  - `llama3.2` (or another chat model)
+  - `llama3.3:70b` (or another chat model)
   - `nomic-embed-text` (for embeddings)
 
 ## Installation
@@ -37,7 +37,7 @@ brew install ollama
 ### 2. Download required models
 
 ```bash
-ollama pull llama3.2
+ollama pull llama3.3:70b
 ollama pull nomic-embed-text
 ```
 

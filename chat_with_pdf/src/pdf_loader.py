@@ -43,9 +43,10 @@ def load_pdf(file_path: str | Path) -> str:
             text += page_text
             logger.debug(f"Extracted page {page_num + 1}: {len(page_text)} characters")
 
+        page_count = len(doc)
         doc.close()
 
-        logger.info(f"Extracted {len(text)} characters from {len(doc)} pages")
+        logger.info(f"Extracted {len(text)} characters from {page_count} pages")
         return text
 
     except Exception as e:

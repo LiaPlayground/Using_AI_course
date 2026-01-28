@@ -13,6 +13,7 @@ import: https://raw.githubusercontent.com/liascript-templates/plantUML/master/RE
 
 # Local LLMs and MCP for Research
 
+<!-- data-type="none" -->
 | Parameter | Information |
 |-----------|-------------|
 | **Course:** | AI in Scientific Data Analysis |
@@ -67,15 +68,15 @@ With local LLMs, the model runs entirely on your computer:
 
 ```ascii
 ┌─────────────────────────────────────────────────────────────┐
-│                     Your Computer                            │
+│                     Your Computer                           │
 │  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐    │
 │  │   Your      │     │   Local     │     │   Output    │    │
 │  │   Data      │────▶│   LLM       │────▶│   Result    │    │
 │  │             │     │  (Ollama)   │     │             │    │
 │  └─────────────┘     └─────────────┘     └─────────────┘    │
-│                                                              │
-│                  Nothing leaves your machine!                │
-└─────────────────────────────────────────────────────────────┘
+│                                                             │
+│                  Nothing leaves your machine!               │
+└─────────────────────────────────────────────────────────────┘                                                                       .
 ```
 
 ******************************************************************************
@@ -85,14 +86,15 @@ With local LLMs, the model runs entirely on your computer:
 
 **Comparison: Cloud vs. Local**
 
-| Aspect | Cloud LLMs | Local LLMs |
-|--------|-----------|------------|
-| **Privacy** | Data sent to external servers | Data stays on your machine |
-| **Cost** | Per-token pricing, subscriptions | Free (hardware cost only) |
-| **Performance** | Fast, powerful models (GPT-4, Claude) | Limited by your hardware |
-| **Internet** | Required | Not required |
-| **Control** | Vendor policies apply | Full control |
-| **Model Size** | Largest available | Fits in your RAM |
+<!-- data-type="none" -->
+| Aspect          | Cloud LLMs                            | Local LLMs                 |
+| --------------- | ------------------------------------- | -------------------------- |
+| **Privacy**     | Data sent to external servers         | Data stays on your machine |
+| **Cost**        | Per-token pricing, subscriptions      | Free (hardware cost only)  |
+| **Performance** | Fast, powerful models (GPT-4, Claude) | Limited by your hardware   |
+| **Internet**    | Required                              | Not required               |
+| **Control**     | Vendor policies apply                 | Full control               |
+| **Model Size**  | Largest available                     | Fits in your RAM           |
 
 ******************************************************************************
 
@@ -121,7 +123,7 @@ Which scenarios are good candidates for local LLMs?
 
 **What is Ollama?**
 
-Ollama is a tool that makes running local LLMs simple:
+Ollama is a tool that makes running local LLMs simple: It wraps different LLM models behind a unified API that runs as a local server on your machine.
 
 - One-command installation
 - Easy model downloading
@@ -129,6 +131,10 @@ Ollama is a tool that makes running local LLMs simple:
 - Runs on Windows, Mac, and Linux
 
 **Website:** https://ollama.ai
+
+!?[Ollama Tutorial](https://www.youtube.com/watch?v=UtSSMs6ObqY)
+
+> **Note:** Ollama is not the only option for running local LLMs. Other popular projects include [Hugging Face Transformers](https://huggingface.co/), [LM Studio](https://lmstudio.ai/), [llama.cpp](https://github.com/ggerganov/llama.cpp), and [vLLM](https://github.com/vllm-project/vllm).
 
 ******************************************************************************
 
@@ -195,12 +201,13 @@ and CO2 into glucose and oxygen...
 
 **Model Selection Based on Hardware**
 
-| RAM | Recommended Models | Use Case |
-|-----|-------------------|----------|
-| **8 GB** | `llama3.2:1b`, `phi3:mini` | Simple tasks, quick responses |
-| **16 GB** | `llama3.2:3b`, `mistral` | General purpose, good quality |
-| **32 GB** | `llama3.1:8b`, `codellama` | Complex tasks, coding |
-| **64+ GB** | `llama3.1:70b` | Research, high quality |
+<!-- data-type="none" -->
+| RAM        | Recommended Models         | Use Case                      |
+| ---------- | -------------------------- | ----------------------------- |
+| **8 GB**   | `llama3.2:1b`, `phi3:mini` | Simple tasks, quick responses |
+| **16 GB**  | `llama3.2:3b`, `mistral`   | General purpose, good quality |
+| **32 GB**  | `llama3.1:8b`, `codellama` | Complex tasks, coding         |
+| **64+ GB** | `llama3.1:70b`             | Research, high quality        |
 
 **GPU Acceleration:**
 
@@ -236,18 +243,148 @@ print(response['message']['content'])
                               {{5-6}}
 ******************************************************************************
 
-**Quiz: Ollama Basics**
+**Adding Context with System Prompts**
 
-What command downloads a model called "mistral"?
+Use the `system` role to provide instructions or context that guides the model's behavior:
 
-- [( )] `ollama install mistral`
-- [(X)] `ollama pull mistral`
-- [( )] `ollama download mistral`
-- [( )] `pip install mistral`
+```python
+from ollama import Client
+
+# Connect to Ollama (default: localhost:11434)
+client = Client(host='http://localhost:11434')
+
+response = client.chat(
+    model='llama3.2',
+    messages=[
+        {
+            'role': 'system',
+            'content': 'You are a biology expert. Explain concepts '
+                       'at an undergraduate level. Be concise.'
+        },
+        {
+            'role': 'user',
+            'content': 'What is DNA?'
+        }
+    ]
+)
+
+print(response['message']['content'])
+```
+
+The **system prompt** sets the context, persona, or constraints for the entire conversation.
+
+> **Demo**: Try modifying the system prompt to see how it affects the response!
 
 ******************************************************************************
 
----
+                              {{6-7}}
+******************************************************************************
+
+**Multi-Turn Conversations**
+
+Maintain conversation history by including previous messages:
+
+```python
+import ollama
+
+# Start a conversation
+messages = [
+    {'role': 'system', 'content': 'You are a helpful science tutor.'}
+]
+
+# First turn
+messages.append({'role': 'user', 'content': 'What is DNA?'})
+response = ollama.chat(model='llama3.2', messages=messages)
+assistant_reply = response['message']['content']
+messages.append({'role': 'assistant', 'content': assistant_reply})
+
+# Second turn - model remembers the context
+messages.append({'role': 'user', 'content': 'How is it replicated?'})
+response = ollama.chat(model='llama3.2', messages=messages)
+print(response['message']['content'])  # Knows "it" refers to DNA
+```
+
+Each message has a `role`: `system`, `user`, or `assistant`.
+
+******************************************************************************
+
+                              {{7-8}}
+******************************************************************************
+
+**Additional Parameters**
+
+Control the model's behavior with optional parameters:
+
+```python
+import ollama
+
+response = ollama.chat(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': 'Write a haiku about DNA.'}],
+    options={
+        'temperature': 0.7,  # Higher = more creative (0.0-1.0)
+        'top_p': 0.9,        # Nucleus sampling threshold
+        'num_predict': 100,  # Max tokens to generate
+    }
+)
+```
+
+**Parameter Explanations:**
+
+- **`temperature`** (values: 0.0 - 1.0): Controls the randomness of token selection. At **0.0**, the model always picks the most probable token – output is deterministic and repeatable. At **1.0**, less probable tokens are chosen more frequently, leading to more creative but also more unpredictable responses. For factual tasks, use 0.1-0.3; for creative writing, 0.7-0.9.
+
+- **`top_p`** (values: 0.1 - 1.0): Also called "Nucleus Sampling". The model only considers the most probable tokens whose cumulative probability reaches the `top_p` threshold. At **0.1**, only the highest probability tokens are included (very focused); at **1.0**, all tokens are considered (maximum diversity). Often used together with `temperature` – a typical combination is `top_p=0.9` with moderate temperature.
+
+- **`num_predict`** (values: 100 - 4096+): Limits the maximum number of generated tokens. One token corresponds to roughly 4 characters or 0.75 words in English. At **100**, you get short responses (~75 words); at **4096**, detailed texts can be generated. Higher values increase computation time proportionally.
+
+******************************************************************************
+
+                              {{9-10}}
+******************************************************************************
+
+**Custom Host Connection**
+
+By default, Ollama connects to `http://localhost:11434`. To connect to a remote server or different port, use the `Client` class:
+
+```python
+from ollama import Client
+
+# Connect to Ollama on a different host/port
+client = Client(host='http://192.168.1.100:11434')
+
+response = client.chat(
+    model='llama3.2',
+    messages=[{'role': 'user', 'content': 'Hello!'}]
+)
+print(response['message']['content'])
+```
+
+**Environment Variable Alternative:**
+
+```bash
+# Set before running your Python script
+export OLLAMA_HOST=http://192.168.1.100:11434
+```
+
+```python
+import ollama
+# Now uses the OLLAMA_HOST environment variable automatically
+response = ollama.chat(model='llama3.2', messages=[...])
+```
+
+**Common Scenarios:**
+
+<!-- data-type="none" -->
+| Scenario | Host Configuration |
+|----------|-------------------|
+| Local (default) | `http://localhost:11434` |
+| Remote server | `http://server-ip:11434` |
+| Docker container | `http://host.docker.internal:11434` |
+| Custom port | `http://localhost:8080` |
+
+> **Demo**: Let's try connecting to a remote Ollama server!
+
+******************************************************************************
 
 ## 3. Practical Example: Chat with PDF
 
@@ -275,8 +412,29 @@ Build a tool that lets you "chat" with a PDF document:
 │              │     │              │     │              │
 └──────────────┘     └──────────────┘     └──────────────┘
         2. Create              4. Generate
-         embeddings            response
+         embeddings            response                                                                                        .
 ```
+
+**What is RAG and why do we need it?**
+
+Large Language Models have two fundamental limitations:
+
+1. **Knowledge cutoff**: LLMs only know what was in their training data. They cannot answer questions about your private documents, recent research papers, or company-internal information.
+2. **Hallucinations**: When LLMs don't know something, they sometimes generate plausible-sounding but incorrect answers.
+
+**Retrieval-Augmented Generation (RAG)** solves both problems by combining:
+
+- **Retrieval**: Search through your documents to find relevant information
+- **Augmentation**: Add this information to the LLM's prompt as context
+- **Generation**: Let the LLM generate an answer based on the provided context
+
+Instead of asking "What does the paper say about X?" and hoping the LLM knows your paper, we:
+
+1. Find the paragraphs in your paper that mention X
+2. Include those paragraphs in the prompt
+3. Ask the LLM to answer based on this specific context
+
+This way, the LLM acts as a "reasoning engine" over your data rather than relying solely on its training knowledge.
 
 This is called **Retrieval-Augmented Generation (RAG)**.
 
@@ -304,7 +462,7 @@ chat_with_pdf/
 ├── Pipfile
 ├── Pipfile.lock
 ├── .gitignore
-└── README.md
+└── README.md                                                                                                                        .
 ```
 
 **Notice:** Same structure as Course 1, but **no `.env` needed** - everything is local!
@@ -337,6 +495,14 @@ def chunk_text(text: str, chunk_size: int = 500) -> list:
         chunks.append(chunk)
     return chunks
 ```
+
+**Explanation:**
+
+- **`load_pdf()`**: Opens a PDF file using PyMuPDF and iterates through each page to extract text. The `get_text()` method handles different PDF encodings and layouts automatically.
+- **`chunk_text()`**: Splits the extracted text into smaller segments of approximately 500 words each. This is essential for RAG because:
+  1. Embedding models have input length limits
+  2. Smaller chunks enable more precise semantic search
+  3. The LLM context window is limited, so we only want to pass the most relevant pieces
 
 ******************************************************************************
 
@@ -371,6 +537,13 @@ def embed_chunks(chunks: list) -> list:
     return embeddings
 ```
 
+**Explanation:**
+
+- **Embeddings**: High-dimensional vectors (e.g., 768 or 1536 numbers) that represent the semantic meaning of text. Texts with similar meanings have similar vectors.
+- **`create_embedding()`**: Uses Ollama's local embedding model (`nomic-embed-text`) to convert a text string into a numerical vector. This runs entirely on your machine.
+- **`embed_chunks()`**: Processes all text chunks and stores each one together with its embedding vector. This creates our searchable knowledge base.
+- **Why `nomic-embed-text`?**: It's a lightweight, high-quality embedding model optimized for semantic search that runs efficiently on consumer hardware.
+
 ******************************************************************************
 
                               {{4-5}}
@@ -403,6 +576,15 @@ def find_relevant_chunks(
     similarities.sort(reverse=True)
     return [text for _, text in similarities[:top_k]]
 ```
+
+**Explanation:**
+
+- **Cosine Similarity**: Measures the angle between two vectors. Values range from -1 (opposite) to 1 (identical). This metric is preferred over Euclidean distance because it focuses on direction (meaning) rather than magnitude.
+- **`cosine_similarity()`**: Computes the dot product of two vectors divided by the product of their magnitudes. Formula: `cos(θ) = (A · B) / (||A|| × ||B||)`
+- **`find_relevant_chunks()`**: Compares the user's question (as an embedding) against all stored chunk embeddings. Returns the `top_k` chunks with the highest similarity scores.
+- **Why `top_k=3`?**: We retrieve multiple chunks to provide sufficient context, but not so many that we overwhelm the LLM's context window or include irrelevant information.
+
+> **Note:** For production use with large document collections, consider using specialized vector databases like ChromaDB, FAISS, or Pinecone for faster similarity search.
 
 ******************************************************************************
 
@@ -442,6 +624,17 @@ Answer:"""
     return response['message']['content']
 ```
 
+**Explanation:**
+
+- **Prompt Engineering**: The prompt template instructs the LLM to:
+  1. Base its answer only on the provided context (grounding)
+  2. Admit when information is not available (reducing hallucinations)
+- **`context_text`**: The retrieved chunks are joined with double newlines to clearly separate them for the LLM.
+- **`ollama.chat()`**: Sends the prompt to the local Llama model. The model generates an answer using both its general knowledge and the specific context provided.
+- **Why this works**: By providing relevant document excerpts directly in the prompt, we "augment" the LLM's knowledge with specific information from your PDFs - this is the "Augmented" in RAG.
+
+> Do you remember our last weeks discussion? How to improve the prompt handling from software engineering perspective?
+
 ******************************************************************************
 
                               {{6-7}}
@@ -474,6 +667,26 @@ while True:
     # Generate answer
     answer = answer_question(question, context)
     print(f"\nAnswer: {answer}")
+```
+
+**Explanation:**
+
+This brings together all RAG components in a complete workflow:
+
+1. **Indexing Phase** (runs once at startup):
+   - `load_pdf()`: Extract raw text from the PDF document
+   - `chunk_text()`: Split into manageable pieces (500 words each)
+   - `embed_chunks()`: Convert each chunk to a vector embedding and store it
+
+2. **Query Phase** (runs for each question):
+   - `create_embedding(question)`: Convert the user's question to the same vector space
+   - `find_relevant_chunks()`: Find the 3 most similar chunks using cosine similarity
+   - `answer_question()`: Send the question + relevant context to the LLM for answer generation
+
+**The RAG Pipeline in Summary:**
+
+```ascii
+User Question → Embed → Search → Retrieve Top-K → Augment Prompt → LLM → Answer
 ```
 
 ******************************************************************************
@@ -532,7 +745,7 @@ Currently, each integration is custom-built:
 ┌─────────┐     Custom     ┌─────────┐
 │   App   │───────────────▶│  Tool   │
 │    B    │  Integration B │    1    │
-└─────────┘                └─────────┘
+└─────────┘                └─────────┘                                              .
 ```
 
 This means duplicated effort for every app + tool combination!
@@ -558,7 +771,7 @@ The Model Context Protocol (MCP) is like USB for AI tools:
 │ (Files) │       │  (DB)   │       │  (API)  │
 └─────────┘       └─────────┘       └─────────┘
 
-Any MCP-compatible client can use any MCP server!
+Any MCP-compatible client can use any MCP server!                                            .
 ```
 
 ******************************************************************************
@@ -569,14 +782,14 @@ Any MCP-compatible client can use any MCP server!
 **MCP Architecture**
 
 ```ascii
-┌─────────────────────────────────────────────────────────┐
-│                    MCP Host                              │
-│        (Claude Desktop, VS Code, Custom App)             │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │                 MCP Client                       │    │
-│  │        (Manages connections to servers)          │    │
-│  └─────────────────────────────────────────────────┘    │
-└────────────────────────┬────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│                    MCP Host                            │
+│        (Claude Desktop, VS Code, Custom App)           │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │                 MCP Client                      │   │
+│  │        (Manages connections to servers)         │   │
+│  └─────────────────────────────────────────────────┘   │
+└────────────────────────┬───────────────────────────────┘
                          │ MCP Protocol
           ┌──────────────┼──────────────┐
           │              │              │
@@ -585,7 +798,7 @@ Any MCP-compatible client can use any MCP server!
     │   MCP    │  │   MCP    │  │   MCP    │
     │  Server  │  │  Server  │  │  Server  │
     │  (Files) │  │   (DB)   │  │  (Git)   │
-    └──────────┘  └──────────┘  └──────────┘
+    └──────────┘  └──────────┘  └──────────┘                                           .
 ```
 
 **Key Concepts:**
@@ -601,13 +814,14 @@ Any MCP-compatible client can use any MCP server!
 
 **When to Use MCP?**
 
-| Use MCP When... | Skip MCP When... |
-|-----------------|------------------|
-| Building reusable integrations | One-off prototype |
-| Team needs shared tools | Single developer project |
-| Multiple AI clients | Only one client |
-| Need governance/audit | Simple scripts |
-| Production deployment | Quick experiments |
+<!-- data-type="none" -->
+| Use MCP When...                | Skip MCP When...         |
+| ------------------------------ | ------------------------ |
+| Building reusable integrations | One-off prototype        |
+| Team needs shared tools        | Single developer project |
+| Multiple AI clients            | Only one client          |
+| Need governance/audit          | Simple scripts           |
+| Production deployment          | Quick experiments        |
 
 **For our Chat with PDF:**
 
@@ -660,7 +874,6 @@ MCP is still evolving, but the core concept - standardized tool interfaces - is 
 
 ******************************************************************************
 
----
 
 ## 5. Summary
 
@@ -698,20 +911,19 @@ MCP is still evolving, but the core concept - standardized tool interfaces - is 
 
 Our Chat with PDF project uses all the practices from Course 1:
 
-| Practice | Course 1 (Code Explainer) | Course 2 (Chat with PDF) |
-|----------|--------------------------|--------------------------|
-| Folder structure | Same pattern | Same pattern |
-| Configuration | settings.yaml | settings.yaml |
-| Secrets | `.env` for API key | **Not needed!** |
-| Logging | Python logging | Python logging |
-| Dependencies | Pipfile | Pipfile |
-| Version control | .gitignore | .gitignore |
+<!-- data-type="none" -->
+| Practice         | Course 1 (Code Explainer) | Course 2 (Chat with PDF) |
+| ---------------- | ------------------------- | ------------------------ |
+| Folder structure | Same pattern              | Same pattern             |
+| Configuration    | settings.yaml             | settings.yaml            |
+| Secrets          | `.env` for API key        | **Not needed!**          |
+| Logging          | Python logging            | Python logging           |
+| Dependencies     | Pipfile                   | Pipfile                  |
+| Version control  | .gitignore                | .gitignore               |
 
 **The difference:** Local LLMs remove the need for secret management!
 
 ******************************************************************************
-
----
 
 ## Resources
 
