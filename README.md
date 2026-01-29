@@ -6,10 +6,10 @@ A two-part course on integrating AI/LLM tools into research workflows, with emph
 
 This course teaches Master students (non-CS disciplines) how to effectively use Large Language Models (LLMs) in their research projects while following best practices for reproducibility and code organization.
 
-| Part | Topic | Duration |
-|------|-------|----------|
-| 1 | [Good Development Practices for Research Projects](./Course1_ProjectFoundations.md) | 90 min |
-| 2 | Local LLMs with Ollama & Model Context Protocol (MCP) | 90 min |
+| Part | Topic | Duration | Code Example |
+|------|-------|----------|--------------|
+| 1 | [Good Development Practices for Research Projects](./Course1_ProjectFoundations.md) | 90 min | [name_parser](./name_parser/README.md) |
+| 2 | [Local LLMs with Ollama & Model Context Protocol (MCP)](./Course2_LocalLLMs_MCP.md) | 90 min | [chat_with_pdf](./chat_with_pdf/README.md) |
 
 ## Author
 
